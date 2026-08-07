@@ -4,5 +4,6 @@ function test()
   console.log("hello");
   console.log("this is a new line");
   console.log("hello to smita");
+  console.log("hello to smita dash");
 }
 test();
