@@ -17,7 +17,7 @@ pipeline {
 
         success {
             emailext(
-                to: 'your_email@gmail.com',
+                to: 'smita.dash1221989@gmail.com',
                 subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
 Hello,
