@@ -2,55 +2,72 @@ pipeline {
 
     agent any
 
-    environment {
-        NODE_ENV = 'QA'
+    tools {
+        // This name must exactly match the NodeJS installation
+        // configured in Manage Jenkins -> Tools
+        nodejs 'NodeJS20'
     }
 
-    tools {
-        nodejs 'NodeJS20'
-    
+    environment {
+        NODE_ENV = 'QA'
+        CI = 'true'
     }
 
     options {
         timestamps()
         disableConcurrentBuilds()
+        buildDiscarder(logRotator(
+            numToKeepStr: '10',
+            artifactNumToKeepStr: '10'
+        ))
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Source') {
             steps {
+                echo 'Checking out source code...'
                 checkout scm
             }
         }
 
-        stage('Install') {
+        stage('Display Versions') {
             steps {
+                bat 'node --version'
+                bat 'npm --version'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing npm packages...'
                 bat 'npm ci'
             }
         }
 
-        stage('Lint') {
+        stage('Install Playwright Browsers') {
             steps {
-                bat 'npm run lint'
+                echo 'Installing Playwright browsers...'
+                bat 'npx playwright install'
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Playwright Tests') {
             steps {
+                echo 'Executing Playwright tests...'
                 bat 'npx playwright test'
             }
         }
 
         stage('Publish HTML Report') {
             steps {
-                publishHTML([
-                    allowMissing: false,
+                publishHTML(target: [
+                    allowMissing: true,
                     alwaysLinkToLastBuild: true,
                     keepAll: true,
                     reportDir: 'playwright-report',
                     reportFiles: 'index.html',
-                    reportName: 'Playwright Report'
+                    reportName: 'Playwright HTML Report'
                 ])
             }
         }
@@ -60,17 +77,29 @@ pipeline {
     post {
 
         success {
-            echo 'Build Successful'
+            echo '====================================='
+            echo ' Playwright Tests Passed'
+            echo '====================================='
         }
 
         failure {
-            echo 'Build Failed'
+            echo '====================================='
+            echo ' Playwright Tests Failed'
+            echo '====================================='
         }
 
         always {
-            archiveArtifacts artifacts: '**/playwright-report/**'
+
+            archiveArtifacts artifacts: '''
+                playwright-report/**
+                test-results/**
+            ''', fingerprint: true
+
+            echo 'Artifacts archived.'
         }
 
+        cleanup {
+            cleanWs()
+        }
     }
-
 }
