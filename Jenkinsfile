@@ -7,7 +7,7 @@ pipeline {
     }
 
     tools {
-        nodejs 'NodeJS'
+        nodejs 'NodeJS20'
     }
 
     options {
