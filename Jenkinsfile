@@ -1,10 +1,10 @@
 pipeline{
-    agents any
+    agent any
     stages{
         stage('checkout')
         {
             steps{
-                bat checkout scm
+                 checkout scm
             }
         }
         stage('Install Dependencies')
